@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voices of Cubs – Student Podcast Hub</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Define StudyCubs theme colors */
+        :root {
+            --study-blue: #0057b7;
+            --study-yellow: #ffcc00;
+        }
+
+        /* Custom Tailwind Configuration (using JIT mode if possible, but defining manual classes for safety) */
+        .bg-study-blue { background-color: var(--study-blue); }
+        .text-study-blue { color: var(--study-blue); }
+        .border-study-blue { border-color: var(--study-blue); }
+        .bg-study-yellow { background-color: var(--study-yellow); }
+        .text-study-yellow { color: var(--study-yellow); }
+
+        /* General Styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e0e7ff; }
+        ::-webkit-scrollbar-thumb { background: var(--study-blue); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004085; }
+
+        /* Styling for the Upload Progress Bar */
+        #upload-progress-bar {
+            transition: width 0.3s ease-in-out;
+            height: 8px;
+        }
+
+        /* Audio player styling to match theme */
+        .podcast-card audio {
+            width: 100%;
+            height: 35px;
+            margin-top: 1rem;
+            background-color: #f0f0f0;
+            border-radius: 9999px;
+        }
+        .podcast-card audio::-webkit-media-controls-panel {
+            background-color: var(--study-blue);
+            color: white;
+            border-radius: 9999px;
+            padding: 0 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="shadow-lg bg-white sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Logo/Brand -->
+            <a href="#" class="flex items-center text-3xl font-extrabold text-study-blue tracking-tighter">
+                <span class="text-study-yellow mr-1">🎧</span> Voices of Cubs
+            </a>
+            <!-- Navigation Links -->
+            <nav class="space-x-4">
+                <button id="nav-episodes" class="text-study-blue font-semibold hover:text-study-yellow transition duration-150">Episodes</button>
+                <button id="nav-submit" class="bg-study-blue text-white py-2 px-4 rounded-full font-semibold shadow-md hover:bg-opacity-90 transition duration-150">
+                    <i data-lucide="mic" class="inline-block w-4 h-4 mr-1"></i> Submit
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <!-- --- Episodes Section (Default View) --- -->
+        <section id="episodes-view" class="active-view">
+            <h1 class="text-4xl font-bold mb-8 text-gray-800">Latest Cub Voices</h1>
+
+            <!-- Filters and Search -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 p-4 bg-white rounded-xl shadow-lg">
+                <div class="md:col-span-2">
+                    <input type="text" id="search-input" placeholder="Search by title, name, or description..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue transition">
+                </div>
+                <select id="category-filter" class="p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue transition">
+                    <option value="">All Categories</option>
+                    <option value="Public Speaking">Public Speaking</option>
+                    <option value="Coding">Coding</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Motivation">Motivation</option>
+                </select>
+                <button id="refresh-button" class="bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300 transition">
+                    <i data-lucide="refresh-cw" class="inline-block w-4 h-4"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Podcast List -->
+            <div id="podcast-list-loading" class="text-center py-12 text-gray-500 hidden">
+                <i data-lucide="loader" class="animate-spin w-8 h-8 mx-auto mb-2 text-study-blue"></i>
+                <p>Fetching amazing student episodes...</p>
+            </div>
+            <div id="podcast-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Podcast cards will be injected here -->
+            </div>
+            <p id="no-results" class="text-center py-12 text-gray-500 text-xl hidden">No podcasts found matching your criteria. Try another search!</p>
+        </section>
+
+        <!-- --- Submit Section (Hidden by default) --- -->
+        <section id="submit-view" class="hidden">
+            <h1 class="text-4xl font-bold mb-8 text-gray-800">Submit Your Voice</h1>
+
+            <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-2xl border-t-8 border-study-blue">
+                <form id="upload-form">
+
+                    <!-- Basic Metadata -->
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label for="student-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                            <!-- NOTE: 'name' attribute added for FormData.get() -->
+                            <input type="text" id="student-name" name="student-name" required maxlength="50" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue">
+                        </div>
+                        <div>
+                            <label for="episode-title" class="block text-sm font-medium text-gray-700">Episode Title</label>
+                            <!-- NOTE: 'name' attribute added for FormData.get() -->
+                            <input type="text" id="episode-title" name="episode-title" required maxlength="100" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue">
+                        </div>
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                            <!-- NOTE: 'name' attribute added for FormData.get() -->
+                            <select id="category" name="category" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue">
+                                <option value="" disabled selected>Select a Category</option>
+                                <option value="Public Speaking">Public Speaking</option>
+                                <option value="Coding">Coding</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Motivation">Motivation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Short Description (Max 250 characters)</label>
+                            <!-- NOTE: 'name' attribute added for FormData.get() -->
+                            <textarea id="description" name="description" rows="3" required maxlength="250" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-study-blue focus:border-study-blue"></textarea>
+                            <p id="desc-count" class="text-right text-xs text-gray-500">0/250</p>
+                        </div>
+                    </div>
+
+                    <!-- Audio Input Section -->
+                    <h3 class="text-xl font-semibold mb-4 text-study-blue border-b pb-2">Audio Upload/Recording</h3>
+
+                    <div class="flex space-x-4 mb-6">
+                        <!-- Record Button -->
+                        <button type="button" id="record-button" class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-150 shadow-md flex items-center justify-center bg-red-500 text-white hover:bg-red-600">
+                            <i data-lucide="mic" class="w-5 h-5 mr-2"></i>
+                            <span id="record-text">Start Recording</span>
+                        </button>
+
+                        <!-- Stop Button -->
+                        <button type="button" id="stop-button" disabled class="flex-1 py-3 px-4 rounded-lg font-semibold transition duration-150 shadow-md flex items-center justify-center bg-gray-500 text-white cursor-not-allowed">
+                            <i data-lucide="square" class="w-5 h-5 mr-2"></i>
+                            Stop Recording
+                        </button>
+                    </div>
+
+                    <div class="text-center text-sm mb-4 text-gray-600">
+                        -- OR --
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label for="audio-file" class="block text-sm font-medium text-gray-700 mb-2">Upload Existing Audio (.mp3, .wav)</label>
+                        <input type="file" id="audio-file" accept="audio/mp3, audio/wav" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-study-blue file:text-white hover:file:bg-opacity-80">
+                        <p id="file-status" class="mt-2 text-sm text-gray-500"></p>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div id="upload-progress-container" class="mt-6 hidden">
+                        <p class="text-sm font-medium text-gray-700 mb-1">Uploading Audio...</p>
+                        <div class="w-full bg-gray-200 rounded-full">
+                            <div id="upload-progress-bar" class="bg-study-yellow text-xs font-medium text-study-blue text-center p-0.5 leading-none rounded-full" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-episode-button" disabled class="mt-8 w-full py-3 bg-study-yellow text-study-blue font-bold text-lg rounded-lg shadow-xl hover:shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Finalize Submission
+                    </button>
+
+                    <p id="form-message" class="mt-4 text-center font-medium text-sm hidden"></p>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-study-blue text-white py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">&copy; <span id="year"></span> StudyCubs - Voices of Cubs Hub</p>
+            <p class="text-xs mt-1 opacity-75">Learn. Share. Grow.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase and Application Logic -->
+    <script type="module">
+        // --- Global Firebase Configuration & Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, serverTimestamp, getDocs, orderBy, where, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- Global Variables ---
+        // Firebase Globals (Mandatory Canvas Variables)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Ensure projectId is present in the firebase config
+        let firebaseConfig = {
+            // Using a default fallback with known config properties provided by the user
+            apiKey: "AIzaSyC4YZeG_t60GX_9EFfMZ9jFDCsLUHbnbz8",
+            authDomain: "studycubs-official.firebaseapp.com",
+            databaseURL: "https://studycubs-official-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "studycubs-official", // CRITICAL FIX: Ensure projectId is set
+            storageBucket: "studycubs-official.firebasestorage.app",
+            messagingSenderId: "328675454729",
+            appId: "1:328675454729:web:11ed5ab9607c0e4590edd8",
+            measurementId: "G-EWPM4HZ7QP"
+        };
+        
+        // If the environment variable is present, attempt to merge it (or use it if valid)
+        if (typeof __firebase_config !== 'undefined') {
+            try {
+                const envConfig = JSON.parse(__firebase_config);
+                // Merge environment config over the hardcoded defaults
+                firebaseConfig = { ...firebaseConfig, ...envConfig };
+            } catch (e) {
+                console.warn("Could not parse __firebase_config, using hardcoded defaults.");
+            }
+        }
+        
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId = null;
+        let unsubscribe = null; // Holds the onSnapshot listener function
+
+        // Cloudinary Globals (Cloud Name Updated)
+        const CLOUDINARY_CLOUD_NAME = 'dikonxiyq'; 
+        const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+        const CLOUDINARY_API_URL = 'https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/upload';
+        
+        // Recorder Globals
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioBlob = null;
+        let isRecording = false;
+
+        // UI Elements
+        const podcastList = document.getElementById('podcast-list');
+        const podcastListLoading = document.getElementById('podcast-list-loading');
+        const noResults = document.getElementById('no-results');
+        const episodesView = document.getElementById('episodes-view');
+        const submitView = document.getElementById('submit-view');
+        const navEpisodes = document.getElementById('nav-episodes');
+        const navSubmit = document.getElementById('nav-submit');
+        const form = document.getElementById('upload-form');
+        const recordButton = document.getElementById('record-button');
+        const stopButton = document.getElementById('stop-button');
+        const audioFileInput = document.getElementById('audio-file');
+        const submitEpisodeButton = document.getElementById('submit-episode-button');
+        const uploadProgressContainer = document.getElementById('upload-progress-container');
+        const uploadProgressBar = document.getElementById('upload-progress-bar');
+        const formMessage = document.getElementById('form-message');
+        const descTextarea = document.getElementById('description');
+        const descCount = document.getElementById('desc-count');
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+
+        let allPodcasts = []; // Store the full list of approved podcasts
+
+        // --- Core Functions ---
+
+        /**
+         * Initializes Firebase and authenticates the user.
+         */
+        async function initializeFirebase() {
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                }
+
+                // Authentication
+                await new Promise(resolve => {
+                    const listener = onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                        } else {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                            // Re-run listener on token sign-in to get final user object
+                            onAuthStateChanged(auth, (u) => { userId = u?.uid || crypto.randomUUID(); resolve(); });
+                        }
+                        listener(); // Detach listener after first run/sign-in
+                    });
+                });
+                console.log("Firebase and Auth Initialized. User ID:", userId);
+                startPodcastListener();
+
+            } catch (error) {
+                console.error("Error initializing Firebase or signing in:", error);
+                formMessage.textContent = "Error: Could not connect to the database.";
+                formMessage.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Real-time listener for the podcast collection.
+         */
+        function startPodcastListener() {
+            if (unsubscribe) {
+                unsubscribe(); // Stop previous listener if it exists
+            }
+
+            const collectionPath = `artifacts/${appId}/public/data/podcasts`;
+            const podcastsCol = collection(db, collectionPath);
+            // Query for approved podcasts
+            const q = query(podcastsCol, where("approved", "==", true));
+
+            podcastListLoading.classList.remove('hidden');
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const podcasts = [];
+                snapshot.forEach((doc) => {
+                    podcasts.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort by creation date (newest first)
+                allPodcasts = podcasts.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                
+                podcastListLoading.classList.add('hidden');
+                filterAndRenderPodcasts();
+            }, (error) => {
+                console.error("Error fetching podcasts:", error);
+                podcastListLoading.innerHTML = `<p class="text-red-500">Error loading podcasts: ${error.message}</p>`;
+            });
+        }
+        
+        /**
+         * Filters the list based on search term and category and re-renders the UI.
+         */
+        function filterAndRenderPodcasts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const category = categoryFilter.value;
+            
+            const filteredPodcasts = allPodcasts.filter(podcast => {
+                const matchesSearch = !searchTerm || 
+                    podcast.title.toLowerCase().includes(searchTerm) ||
+                    podcast.name.toLowerCase().includes(searchTerm) ||
+                    podcast.description.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !category || podcast.category === category;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            renderPodcasts(filteredPodcasts);
+        }
+        
+        /**
+         * Renders the list of podcasts into the grid.
+         * @param {Array<Object>} podcasts - The list of podcasts to render.
+         */
+        function renderPodcasts(podcasts) {
+            podcastList.innerHTML = ''; // Clear existing cards
+            
+            if (podcasts.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+
+            podcasts.forEach(podcast => {
+                const card = document.createElement('div');
+                card.className = 'podcast-card bg-white rounded-xl p-6 shadow-xl hover:shadow-2xl transition duration-300 flex flex-col justify-between';
+                
+                const date = podcast.createdAt ? new Date(podcast.createdAt.toDate()).toLocaleDateString() : 'N/A';
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-sm font-semibold px-3 py-1 rounded-full bg-study-blue text-white">${podcast.category}</span>
+                            ${podcast.featured ? `<span class="text-xs font-bold px-3 py-1 rounded-full bg-study-yellow text-study-blue shadow-lg">Featured Voice</span>` : ''}
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">${podcast.title}</h2>
+                        <p class="text-sm text-gray-600 mb-3">By: <span class="font-medium">${podcast.name}</span></p>
+                        <p class="text-gray-700 text-sm mb-4">${podcast.description}</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <audio controls src="${podcast.audioURL}" preload="none">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-2">
+                            <span>Uploaded: ${date}</span>
+                            <button class="share-button text-study-blue hover:text-study-yellow transition" data-url="${window.location.origin + window.location.pathname + '?id=' + podcast.id}" title="Share Episode">
+                                <i data-lucide="share-2" class="w-4 h-4 inline-block"></i> Share
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                podcastList.appendChild(card);
+            });
+            
+            // Re-initialize lucide icons for the new elements
+            lucide.createIcons();
+        }
+
+
+        // --- Audio Recording Functions ---
+
+        /**
+         * Starts the audio recording process.
+         */
+        async function startRecording() {
+            if (isRecording) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                audioBlob = null;
+                isRecording = true;
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    // Optional: You could play back the recorded audio here
+                    // const audioUrl = URL.createObjectURL(audioBlob);
+                    // document.getElementById('file-status').innerHTML = `<a href="${audioUrl}" target="_blank" class="text-study-blue underline">Listen to Recording</a>`;
+                    
+                    document.getElementById('file-status').textContent = `Recorded file ready (${(audioBlob.size / 1024 / 1024).toFixed(2)} MB).`;
+                    submitEpisodeButton.disabled = false;
+                    isRecording = false;
+                    
+                    // Stop tracks on the stream to release mic
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                
+                recordButton.disabled = true;
+                stopButton.disabled = false;
+                recordButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                recordButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+                recordButton.querySelector('#record-text').textContent = 'Recording...';
+                
+                stopButton.classList.remove('bg-gray-500', 'text-white', 'cursor-not-allowed');
+                stopButton.classList.add('bg-study-blue', 'hover:bg-opacity-90', 'text-white');
+                audioFileInput.disabled = true; // Disable file upload while recording
+                submitEpisodeButton.disabled = true;
+
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                formMessage.textContent = "Error: Could not access microphone. Please ensure permissions are granted.";
+                formMessage.classList.remove('hidden');
+                // Re-enable buttons if recording failed to start
+                recordButton.disabled = false;
+                recordButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                recordButton.classList.remove('bg-gray-500', 'cursor-not-allowed');
+                recordButton.querySelector('#record-text').textContent = 'Start Recording';
+            }
+        }
+
+        /**
+         * Stops the audio recording.
+         */
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+            recordButton.classList.add('bg-red-500', 'hover:bg-red-600');
+            recordButton.classList.remove('bg-gray-500', 'cursor-not-allowed');
+            recordButton.querySelector('#record-text').textContent = 'Record New';
+            
+            stopButton.classList.add('bg-gray-500', 'text-white', 'cursor-not-allowed');
+            stopButton.classList.remove('bg-study-blue', 'hover:bg-opacity-90', 'text-white');
+            audioFileInput.disabled = false;
+        }
+
+        // --- Submission Logic ---
+
+        /**
+         * Handles the entire submission process: Upload to Cloudinary, then save metadata to Firestore.
+         * @param {Blob | File} fileToUpload - The audio Blob (from recording) or File (from upload).
+         */
+        async function handleSubmission(fileToUpload) {
+            const formData = new FormData(form);
+            // formData.get() now works because 'name' attributes were added to the form fields
+            const studentName = formData.get('student-name');
+            const episodeTitle = formData.get('episode-title');
+            const category = formData.get('category');
+            const description = formData.get('description');
+
+            uploadProgressContainer.classList.remove('hidden');
+            formMessage.classList.add('hidden');
+            submitEpisodeButton.disabled = true;
+
+            try {
+                // 1. Upload to Cloudinary
+                const audioURL = await uploadToCloudinary(fileToUpload, studentName);
+                
+                if (!audioURL) {
+                    throw new Error("Cloudinary upload failed or returned no URL.");
+                }
+
+                // 2. Save Metadata to Firestore
+                const collectionPath = `artifacts/${appId}/public/data/podcasts`;
+                await addDoc(collection(db, collectionPath), {
+                    name: studentName,
+                    title: episodeTitle,
+                    category: category,
+                    description: description,
+                    audioURL: audioURL,
+                    createdAt: serverTimestamp(),
+                    featured: false,
+                    approved: false // Requires admin approval to show on the main list
+                });
+                
+                // 3. Success Feedback
+                // Use a standard message box instead of alert()
+                showModal('Success!', 'Your episode has been submitted for review! It will appear on the main page once approved by an administrator.', 'check-circle');
+                
+                // Reset form and state
+                form.reset();
+                uploadProgressContainer.classList.add('hidden');
+                uploadProgressBar.style.width = '0%';
+                uploadProgressBar.textContent = '0%';
+                audioBlob = null;
+                document.getElementById('file-status').textContent = '';
+                submitEpisodeButton.disabled = true;
+                
+                // Switch back to the episodes view after success
+                switchView('episodes-view');
+
+
+            } catch (error) {
+                console.error("Submission Error:", error);
+                uploadProgressContainer.classList.add('hidden');
+                formMessage.textContent = `Submission failed: ${error.message}. Please check your Cloudinary settings (Unsigned preset 'ml_default' is required).`;
+                formMessage.classList.remove('hidden', 'text-green-500');
+                formMessage.classList.add('text-red-500');
+            } finally {
+                submitEpisodeButton.disabled = false;
+            }
+        }
+        
+        /**
+         * Uploads the audio file to Cloudinary using an unsigned preset.
+         * @param {Blob | File} file - The file data to upload.
+         * @param {string} studentName - Used for filename generation.
+         * @returns {Promise<string>} The public URL of the uploaded audio.
+         */
+        function uploadToCloudinary(file, studentName) {
+            // Ensure studentName is a string, defaulting to 'anonymous' if somehow empty (though 'required' should prevent this)
+            const safeStudentName = studentName || 'anonymous_cub';
+
+            return new Promise(async (resolve, reject) => {
+                const cloudinaryData = new FormData();
+                const timestamp = Date.now();
+                const fileName = `${safeStudentName.replace(/\s/g, '_')}_${timestamp}`;
+
+                cloudinaryData.append('file', file, fileName);
+                cloudinaryData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                try {
+                    const xhr = new XMLHttpRequest();
+                    
+                    // Progress event listener
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            uploadProgressBar.style.width = `${percent}%`;
+                            uploadProgressBar.textContent = `${percent}%`;
+                        }
+                    }, false);
+                    
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                const response = JSON.parse(xhr.responseText);
+                                console.log("Cloudinary Response:", response);
+                                resolve(response.secure_url);
+                            } else {
+                                const error = JSON.parse(xhr.responseText);
+                                reject(new Error(`Cloudinary Error: ${error.error.message}`));
+                            }
+                        }
+                    };
+                    
+                    // Use the dynamically generated CLOUDINARY_API_URL
+                    xhr.open('POST', CLOUDINARY_API_URL);
+                    xhr.send(cloudinaryData);
+                    
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+
+        // --- UI/Event Handlers ---
+
+        /**
+         * Switches the main content view.
+         * @param {string} viewId - The ID of the section to show ('episodes-view' or 'submit-view').
+         */
+        function switchView(viewId) {
+            episodesView.classList.add('hidden');
+            submitView.classList.add('hidden');
+            
+            if (viewId === 'episodes-view') {
+                episodesView.classList.remove('hidden');
+            } else if (viewId === 'submit-view') {
+                submitView.classList.remove('hidden');
+            }
+            
+            // Re-initialize lucide icons when a new view is shown
+            lucide.createIcons();
+        }
+
+        /**
+         * Custom modal replacement for alert/confirm.
+         */
+        function showModal(title, message, icon) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-100">
+                    <div class="text-center">
+                        <i data-lucide="${icon}" class="w-10 h-10 text-study-blue mx-auto mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">${title}</h3>
+                        <p class="text-sm text-gray-500 mb-6">${message}</p>
+                        <button id="modal-close" class="bg-study-blue text-white py-2 px-4 rounded-full font-semibold hover:bg-opacity-90 transition">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            
+            document.getElementById('modal-close').onclick = () => {
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.remove(), 300);
+            };
+        }
+
+        // --- Event Listeners Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set footer year
+            document.getElementById('year').textContent = new Date().getFullYear();
+            
+            // 1. Initialize Firebase
+            initializeFirebase();
+
+            // 2. Navigation
+            navEpisodes.addEventListener('click', () => switchView('episodes-view'));
+            navSubmit.addEventListener('click', () => switchView('submit-view'));
+            
+            // 3. Description Character Counter
+            descTextarea.addEventListener('input', () => {
+                descCount.textContent = `${descTextarea.value.length}/250`;
+            });
+
+            // 4. Audio Recorder Controls
+            recordButton.addEventListener('click', startRecording);
+            stopButton.addEventListener('click', stopRecording);
+            
+            // 5. File Upload Handler
+            audioFileInput.addEventListener('change', (e) => {
+                stopRecording(); // Stop any ongoing recording if file is selected
+                audioBlob = e.target.files[0];
+                if (audioBlob) {
+                    document.getElementById('file-status').textContent = `File selected: ${audioBlob.name} (${(audioBlob.size / 1024 / 1024).toFixed(2)} MB).`;
+                    submitEpisodeButton.disabled = false;
+                } else {
+                    document.getElementById('file-status').textContent = '';
+                    submitEpisodeButton.disabled = true;
+                }
+            });
+            
+            // 6. Form Submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Determine source of audio
+                let fileToUpload = null;
+                if (audioBlob && audioBlob instanceof Blob) {
+                    // Audio from recording
+                    fileToUpload = audioBlob;
+                } else if (audioFileInput.files.length > 0) {
+                    // Audio from file upload
+                    fileToUpload = audioFileInput.files[0];
+                } else {
+                    formMessage.textContent = "Please record or select an audio file to submit.";
+                    formMessage.classList.remove('hidden');
+                    formMessage.classList.remove('text-green-500');
+                    formMessage.classList.add('text-red-500');
+                    return;
+                }
+                
+                // All required form fields are checked by HTML 'required' attribute
+                handleSubmission(fileToUpload);
+            });
+            
+            // 7. Search and Filter Handlers
+            searchInput.addEventListener('input', filterAndRenderPodcasts);
+            categoryFilter.addEventListener('change', filterAndRenderPodcasts);
+            
+            // 8. Refresh Button
+            document.getElementById('refresh-button').addEventListener('click', () => {
+                // Simply re-triggering the listener is enough to refresh the list
+                startPodcastListener();
+            });
+            
+            // 9. Share Button Delegation
+            podcastList.addEventListener('click', (e) => {
+                const shareButton = e.target.closest('.share-button');
+                if (shareButton) {
+                    const shareUrl = shareButton.dataset.url;
+                    try {
+                        navigator.clipboard.writeText(shareUrl);
+                        // Show confirmation message
+                        showModal('Link Copied!', 'The episode share link has been copied to your clipboard.', 'clipboard-check');
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                        showModal('Error', 'Could not automatically copy link. Please manually copy this URL: ' + shareUrl, 'alert-triangle');
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

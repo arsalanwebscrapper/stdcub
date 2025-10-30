@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyCubs Admin Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+    <div id="admin-login" class="active">
+        <div class="login-container">
+            <h2>Admin Login</h2>
+            <input type="email" id="admin-email" placeholder="Email" required>
+            <input type="password" id="admin-password" placeholder="Password" required>
+            <button id="login-btn">Login</button>
+            <p id="login-error" class="error-message"></p>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" style="display: none;">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>StudyCubs</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link active" data-target="home">Home</a></li>
+                    <li><a href="#" class="nav-link" data-target="users">Users</a></li>
+                    <li><a href="#" class="nav-link" data-target="courses">Courses</a></li>
+                    <li><a href="#" class="nav-link" data-target="resources">Free Resources</a></li>
+                    <li><a href="#" class="nav-link" data-target="blog">Blog</a></li>
+                    <li><a href="#" class="nav-link" data-target="podcasts">Podcasts</a></li>
+                    <li><a href="#" class="nav-link" data-target="webinars">Webinars</a></li>
+                    <li><a href="#" class="nav-link" data-target="settings">Settings</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-btn">Logout</button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <section id="home" class="module active">
+                <h1>Dashboard Overview</h1>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Total Users</h3>
+                        <p id="users-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Courses</h3>
+                        <p id="courses-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Blogs</h3>
+                        <p id="blogs-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Podcasts</h3>
+                        <p id="podcasts-count">0</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+            </section>
+            <section id="users" class="module">
+                <h1>Users Management</h1>
+                <div class="user-controls">
+                    <input type="text" id="user-search" placeholder="Search by name or email">
+                    <select id="user-filter">
+                        <option value="all">All</option>
+                        <option value="student">Student</option>
+                        <option value="parent">Parent</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- User rows will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+            <section id="courses" class="module">
+                <h1>Courses Management</h1>
+                <div class="course-form-container">
+                    <h2>Add New Course</h2>
+                    <input type="text" id="course-title" placeholder="Course Title" required>
+                    <textarea id="course-description" placeholder="Course Description" required></textarea>
+                    <input type="text" id="course-category" placeholder="Category" required>
+                    <input type="file" id="course-image" accept="image/*" required>
+                    <button id="add-course-btn">Add Course</button>
+                </div>
+                <table id="courses-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courses-table-body">
+                        <!-- Course rows will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+            <section id="resources" class="module">
+                <h1>Free Resources</h1>
+                <div class="resource-form-container">
+                    <h2>Upload New Resource</h2>
+                    <input type="text" id="resource-title" placeholder="Resource Title" required>
+                    <input type="text" id="resource-subject" placeholder="Subject" required>
+                    <input type="text" id="resource-category" placeholder="Category" required>
+                    <input type="file" id="resource-file" required>
+                    <button id="add-resource-btn">Add Resource</button>
+                </div>
+                <table id="resources-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Subject</th>
+                            <th>Category</th>
+                            <th>Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resources-table-body">
+                        <!-- Resource rows will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+            <section id="blog" class="module">
+                <h1>Blog Management</h1>
+
+                <div class="blog-tabs">
+                    <button class="blog-tab-link active" data-target="create-edit">Create / Edit</button>
+                    <button class="blog-tab-link" data-target="seo-optimization">SEO & Keywords</button>
+                    <button class="blog-tab-link" data-target="intern-submissions">Intern Submissions</button>
+                    <button class="blog-tab-link" data-target="published-blogs">Published Blogs</button>
+                    <button class="blog-tab-link" data-target="drafts-revisions">Drafts & Revisions</button>
+                    <button class="blog-tab-link" data-target="blog-settings">Settings</button>
+                </div>
+
+                <div id="create-edit" class="blog-tab-content active">
+                    <div id="post-editor">
+                        <h2>Create/Edit Post</h2>
+                        <form id="post-form">
+                            <input type="hidden" id="post-id">
+                            <input type="text" id="post-title" placeholder="Title" required>
+                            <div id="editor-container"></div>
+                            <input type="text" id="post-category" placeholder="Category">
+                            <input type="file" id="featured-image" accept="image/*">
+                            <textarea id="meta-description" placeholder="Meta Description"></textarea>
+                            <input type="text" id="keywords" placeholder="Keywords">
+                            <button type="submit">Save Post</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="seo-optimization" class="blog-tab-content">
+                    <h2>SEO & Keyword Optimization</h2>
+                    <button id="analyze-seo-btn">Analyze SEO</button>
+                    <div id="seo-results"></div>
+                </div>
+
+                <div id="intern-submissions" class="blog-tab-content">
+                    <h2>Intern Submissions</h2>
+                    <table class="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Author</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intern-submissions-tbody">
+                            <!-- Intern submissions will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="published-blogs" class="blog-tab-content">
+                    <h2>Published Blogs</h2>
+                    <table class="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="published-posts-tbody">
+                            <!-- Published blog posts will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="drafts-revisions" class="blog-tab-content">
+                    <h2>Drafts & Revisions</h2>
+                    <table class="posts-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Author</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drafts-tbody">
+                            <!-- Drafts will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="blog-settings" class="blog-tab-content">
+                    <h2>Settings & Permissions</h2>
+                    <div class="settings-container">
+                        <div class="setting-card">
+                            <h2>Role Management</h2>
+                            <input type="email" id="blog-user-email-for-role" placeholder="User Email">
+                            <select id="blog-user-role">
+                                <option value="intern">Intern</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <button id="blog-assign-role-btn">Assign Role</button>
+                        </div>
+                        <div class="setting-card">
+                            <h2>Category Management</h2>
+                            <input type="text" id="new-category" placeholder="New Category">
+                            <button id="add-category-btn">Add Category</button>
+                            <ul id="category-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="podcasts" class="module">
+                <h1>Podcasts Management</h1>
+
+                <h2>Pending Podcasts</h2>
+                <table id="pending-podcasts-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Date Submitted</th>
+                            <th>Audio</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-podcasts-table-body">
+                        <!-- Pending podcast rows will be inserted here -->
+                    </tbody>
+                </table>
+
+                <h2 style="margin-top: 2rem;">Published Podcasts</h2>
+                <table id="published-podcasts-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Date Published</th>
+                            <th>Audio</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="published-podcasts-table-body">
+                        <!-- Published podcast rows will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+            <section id="webinars" class="module">
+                <h1>Webinars & Events</h1>
+                <div class="webinar-form-container">
+                    <h2>Add New Webinar/Event</h2>
+                    <input type="text" id="webinar-title" placeholder="Title" required>
+                    <input type="date" id="webinar-date" required>
+                    <input type="time" id="webinar-time" required>
+                    <input type="text" id="webinar-speaker" placeholder="Speaker" required>
+                    <input type="url" id="webinar-link" placeholder="Registration Link" required>
+                    <button id="add-webinar-btn">Add Webinar</button>
+                </div>
+                <table id="webinars-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Speaker</th>
+                            <th>Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="webinars-table-body">
+                        <!-- Webinar rows will be inserted here -->
+                    </tbody>
+                </table>
+            </section>
+            <section id="settings" class="module">
+                <h1>Admin Settings</h1>
+                <div class="settings-container">
+                    <div class="setting-card">
+                        <h2>Create New Admin</h2>
+                        <input type="email" id="new-admin-email" placeholder="New Admin Email" required>
+                        <input type="password" id="new-admin-password" placeholder="New Admin Password" required>
+                        <button id="create-admin-btn">Create Admin</button>
+                    </div>
+                    <div class="setting-card">
+                        <h2>Role Management</h2>
+                        <input type="email" id="user-email-for-role" placeholder="User Email">
+                        <select id="user-role">
+                            <option value="intern">Intern</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button id="assign-role-btn">Assign Role</button>
+                    </div>
+                    <div class="setting-card">
+                        <h2>Theme</h2>
+                        <div class="theme-switcher">
+                            <span>Light</span>
+                            <label class="switch">
+                                <input type="checkbox" id="theme-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span>Dark</span>
+                        </div>
+                    </div>
+                    <div class="setting-card">
+                        <h2>Activity Logs</h2>
+                        <div id="activity-logs"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-storage.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

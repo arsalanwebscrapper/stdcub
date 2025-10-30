@@ -1,0 +1,53 @@
+/* === Navbar specific === */
+header, .top-bar {
+  all: unset; /* reset conflicts */
+  display: block;
+}
+.navbar {
+  display: block;
+}
+
+.top-bar {
+  background: #0097B2;
+  color: #fff;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.navbar {
+  background-color: #fff !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #000 !important;
+}
+.navbar-brand .cubs-span {
+  color: #0097B2;
+}
+.nav-link {
+  color: #333 !important;
+  font-weight: 500;
+}
+.nav-link:hover {
+  color: #0097B2 !important;
+}
+.btn-warning {
+  background-color: #ffc107;
+  border: none;
+  font-weight: 600;
+}
+.btn-warning:hover {
+  background-color: #ffb300;
+}
+
+/* === Footer specific === */
+footer {
+  background: #111;
+  color: #fff;
+  text-align: center;
+  padding: 20px 0;
+}

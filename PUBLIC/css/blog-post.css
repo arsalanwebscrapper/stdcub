@@ -1,0 +1,20 @@
+/* Blog Post Page Styles */
+#blog-post-header img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+#blog-post-content {
+    line-height: 1.6;
+}
+
+#sidebar #categories ul, #sidebar #latest-posts ul {
+    list-style: none;
+    padding: 0;
+}
+
+#sidebar #categories ul li, #sidebar #latest-posts ul li {
+    margin-bottom: 10px;
+}

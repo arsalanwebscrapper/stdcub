@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Course Admin Panel - Visual Editor</title>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script> 
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0097b2;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button {
+            background-color: #7b4eff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #6a3adb;
+        }
+        .section-header {
+            background-color: #ffbc36;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .course-selector {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        /* Style for repeatable sections */
+        .repeater-item {
+            border: 1px solid #ffbc36;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        .repeater-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+
+        /* table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #0097b2; color: white; }
+        .edit-btn { background: #28a745; color: #fff; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
+        .delete-btn { background: #dc3545; color: #fff; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; margin-left: 6px; }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            input, textarea { font-size: 14px; }
+            th, td { font-size: 13px; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="container">
+        <h1>Course Content Editor</h1>
+
+        <!-- NEW: Course ID input (replaces dropdown) -->
+        <div class="form-group">
+            <label for="course-id-input">Course ID (unique, used as Firestore doc ID)</label>
+            <input type="text" id="course-id-input" placeholder="e.g., ai_coding or my_new_course">
+            <small>Type an ID to create a new course or load existing via the table below.</small>
+        </div>
+
+        <form id="course-editor-form">
+            <div class="section-header">General Information</div>
+            <div class="form-group">
+                <label for="title-input">Course Title (e.g., Explore the Future with **AI & Coding**):</label>
+                <input type="text" id="title-input" required>
+            </div>
+            <div class="form-group">
+                <label for="tagline-input">Short Description / Tagline:</label>
+                <textarea id="tagline-input" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="image-input">Hero Image URL:</label>
+                <input type="text" id="image-input" placeholder="Paste image URL here">
+            </div>
+            
+            <hr>
+
+            <div class="section-header">Statistics (The Gold Boxes)</div>
+            <div id="stats-container"></div>
+            <button type="button" onclick="addStatsItem()">+ Add New Statistic</button>
+            
+            <hr>
+
+            <div class="section-header">Learning Outcomes (Blue/Pink/Green Cards)</div>
+            <div id="learning-outcomes-container"></div>
+            <button type="button" onclick="addLearningOutcomeItem()">+ Add New Learning Card</button>
+            
+            <hr>
+
+            <div class="section-header">Confidence/Level Journey (The Level Cards)</div>
+            <div id="levels-container"></div>
+            <button type="button" onclick="addLevelItem()">+ Add New Level</button>
+
+            <hr>
+            
+            <div class="section-header">Educate Features ("Win Any Exam")</div>
+            <div id="feature-cards-container"></div>
+            <button type="button" onclick="addFeatureCardItem()">+ Add New Feature Card</button>
+            
+            <hr>
+
+            <div class="section-header">Pricing / Call-to-Action</div>
+            <div class="form-group">
+                <label for="pricing-heading-input">Pricing Heading:</label>
+                <input type="text" id="pricing-heading-input" required>
+            </div>
+            <div class="form-group">
+                <label for="pricing-paragraph-input">Pricing Paragraph:</label>
+                <textarea id="pricing-paragraph-input" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="pricing-image-input">Pricing Image URL:</label>
+                <input type="text" id="pricing-image-input" placeholder="Paste image URL here">
+            </div>
+
+            <button type="button" onclick="saveCourseData()">Save All Changes to Firebase</button>
+            <div id="status-message" class="status-message"></div>
+        </form>
+
+        <h2 style="margin-top:30px; color:#0097b2;">All Saved Courses</h2>
+        <table id="courses-table">
+            <thead>
+                <tr>
+                    <th>Course ID</th>
+                    <th>Title</th>
+                    <th>Tagline</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="courses-table-body">
+                <tr><td colspan="4" style="text-align:center;">Loading courses...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+<script>
+    // ** FIREBASE CONFIGURATION **
+    const firebaseConfig = {
+        apiKey: "AIzaSyC4YZeG_t60GX_9EFfMZ9jFDCsLUHbnbz8",
+        authDomain: "studycubs-official.firebaseapp.com",
+        databaseURL: "https://studycubs-official-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "studycubs-official",
+        storageBucket: "studycubs-official.firebasestorage.app",
+        messagingSenderId: "328675454729",
+        appId: "1:328675454729:web:11ed5ab9607c0e4590edd8",
+        measurementId: "G-EWPM4HZ7QP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); 
+
+    // Default values for new items
+    const DEFAULT_STAT = { icon: '📊', count: '0', label: 'New Stat' };
+    const DEFAULT_LEARNING_CARD = { icon: '💡', title: 'New Skill', class: 'blue' };
+    const DEFAULT_LEVEL = { h3: '00', details: ['Detail 1', 'Detail 2'], button: 'New Level', class: 'beginner' };
+    const DEFAULT_FEATURE_CARD = { 
+        icon_url: "https://cdn-icons-png.flaticon.com/512/3135/3135755.png", 
+        title: "New Feature Focus", 
+        list: ["Benefit 1", "Benefit 2"] 
+    };
+
+    // --- UTILITY FUNCTIONS ---
+    function displayStatus(message, isError = false) {
+        const statusDiv = document.getElementById('status-message');
+        statusDiv.textContent = message;
+        statusDiv.className = 'status-message ' + (isError ? 'error' : 'success');
+        if (isError) statusDiv.style.backgroundColor = '#f8d7da';
+        else statusDiv.style.backgroundColor = '#d4edda';
+        setTimeout(() => statusDiv.textContent = '', 5000);
+    }
+
+    // --- REPEATER BUILDERS (VISUAL EDITORS) ---
+    function createStatsItem(data, index) {
+        const container = document.createElement('div');
+        container.className = 'repeater-item stats-item';
+        container.innerHTML = `
+            <div class="repeater-header">
+                Stat #${index + 1}
+                <button type="button" class="remove-btn" onclick="removeRepeaterItem(this)">Remove</button>
+            </div>
+            <label>Icon (Emoji):</label><input type="text" class="stat-icon" value="${data.icon || ''}" placeholder="e.g., 👨‍🎓">
+            <label>Count (e.g., 40+):</label><input type="text" class="stat-count" value="${data.count || ''}" required>
+            <label>Label:</label><input type="text" class="stat-label" value="${data.label || ''}" required>
+        `;
+        return container;
+    }
+
+    function createLearningOutcomeItem(data, index) {
+        const container = document.createElement('div');
+        container.className = 'repeater-item learning-item';
+        container.innerHTML = `
+            <div class="repeater-header">
+                Card #${index + 1}
+                <button type="button" class="remove-btn" onclick="removeRepeaterItem(this)">Remove</button>
+            </div>
+            <label>Icon (Emoji):</label><input type="text" class="learning-icon" value="${data.icon || ''}" placeholder="e.g., 💰">
+            <label>Title:</label><input type="text" class="learning-title" value="${data.title || ''}" required>
+            <label>CSS Class (Color):</label>
+            <select class="learning-class">
+                <option value="blue" ${data.class === 'blue' ? 'selected' : ''}>Blue</option>
+                <option value="pink" ${data.class === 'pink' ? 'selected' : ''}>Pink</option>
+                <option value="green" ${data.class === 'green' ? 'selected' : ''}>Green</option>
+                <option value="cream" ${data.class === 'cream' ? 'selected' : ''}>Cream</option>
+                <option value="purple" ${data.class === 'purple' ? 'selected' : ''}>Purple</option>
+            </select>
+        `;
+        return container;
+    }
+    
+    function createLevelItem(data, index) {
+        const container = document.createElement('div');
+        container.className = 'repeater-item level-item';
+        container.innerHTML = `
+            <div class="repeater-header">
+                Level #${index + 1}
+                <button type="button" class="remove-btn" onclick="removeRepeaterItem(this)">Remove</button>
+            </div>
+            <label>Level Number (H3):</label><input type="text" class="level-h3" value="${data.h3 || ''}" placeholder="e.g., 01">
+            <label>Button Text:</label><input type="text" class="level-button" value="${data.button || ''}" placeholder="e.g., Explorer Level">
+            <label>CSS Class (Color):</label>
+            <select class="level-class">
+                <option value="beginner" ${data.class === 'beginner' ? 'selected' : ''}>Beginner (Blue)</option>
+                <option value="intermediate" ${data.class === 'intermediate' ? 'selected' : ''}>Intermediate (Orange)</option>
+                <option value="advanced" ${data.class === 'advanced' ? 'selected' : ''}>Advanced (Purple)</option>
+            </select>
+            <label>Details (One per line):</label>
+            <textarea class="level-details" rows="4" placeholder="Class : 15hrs\nActivity : 1 Class\nBatch size : 1:5">${(data.details || []).join('\n')}</textarea>
+        `;
+        return container;
+    }
+
+    function createFeatureCardItem(data, index) {
+        const container = document.createElement('div');
+        container.className = 'repeater-item feature-item';
+        container.innerHTML = `
+            <div class="repeater-header">
+                Feature Card #${index + 1}
+                <button type="button" class="remove-btn" onclick="removeRepeaterItem(this)">Remove</button>
+            </div>
+            <label>Icon URL:</label><input type="text" class="feature-icon-url" value="${data.icon_url || ''}" placeholder="Paste URL here">
+            <label>Title:</label><input type="text" class="feature-title" value="${data.title || ''}" required>
+            <label>List Items (One per line):</label>
+            <textarea class="feature-list" rows="4" placeholder="Block Coding\nBasic Loops\nBenefit Three">${(data.list || []).join('\n')}</textarea>
+        `;
+        return container;
+    }
+
+    // --- REPEATER CONTROLLERS (ADD/REMOVE) ---
+    function removeRepeaterItem(button) {
+        button.closest('.repeater-item').remove();
+    }
+
+    function addStatsItem(data = DEFAULT_STAT) {
+        const container = document.getElementById('stats-container');
+        const index = container.children.length;
+        container.appendChild(createStatsItem(data, index));
+    }
+    
+    function addLearningOutcomeItem(data = DEFAULT_LEARNING_CARD) {
+        const container = document.getElementById('learning-outcomes-container');
+        const index = container.children.length;
+        container.appendChild(createLearningOutcomeItem(data, index));
+    }
+    
+    function addLevelItem(data = DEFAULT_LEVEL) {
+        const container = document.getElementById('levels-container');
+        const index = container.children.length;
+        container.appendChild(createLevelItem(data, index));
+    }
+
+    function addFeatureCardItem(data = DEFAULT_FEATURE_CARD) {
+        const container = document.getElementById('feature-cards-container');
+        const index = container.children.length;
+        container.appendChild(createFeatureCardItem(data, index));
+    }
+
+    // --- COLLECT FORM DATA ---
+    function collectStatsData() {
+        const stats = [];
+        document.querySelectorAll('#stats-container .stats-item').forEach(item => {
+            stats.push({
+                icon: item.querySelector('.stat-icon').value,
+                count: item.querySelector('.stat-count').value,
+                label: item.querySelector('.stat-label').value
+            });
+        });
+        return stats;
+    }
+
+    function collectLearningOutcomesData() {
+        const outcomes = [];
+        document.querySelectorAll('#learning-outcomes-container .learning-item').forEach(item => {
+            outcomes.push({
+                icon: item.querySelector('.learning-icon').value,
+                title: item.querySelector('.learning-title').value,
+                class: item.querySelector('.learning-class').value
+            });
+        });
+        return outcomes;
+    }
+
+    function collectLevelsData() {
+        const levels = [];
+        document.querySelectorAll('#levels-container .level-item').forEach(item => {
+            const details = item.querySelector('.level-details').value.split('\n').filter(line => line.trim() !== '');
+            levels.push({
+                h3: item.querySelector('.level-h3').value,
+                details: details,
+                button: item.querySelector('.level-button').value,
+                class: item.querySelector('.level-class').value
+            });
+        });
+        return levels;
+    }
+    
+    function collectFeatureCardsData() {
+        const features = [];
+        document.querySelectorAll('#feature-cards-container .feature-item').forEach(item => {
+            const list = item.querySelector('.feature-list').value.split('\n').filter(line => line.trim() !== '');
+            features.push({
+                icon_url: item.querySelector('.feature-icon-url').value,
+                title: item.querySelector('.feature-title').value,
+                list: list
+            });
+        });
+        return features;
+    }
+
+    // helper to clear repeaters
+    function clearRepeaters() {
+        document.getElementById('stats-container').innerHTML = '';
+        document.getElementById('learning-outcomes-container').innerHTML = '';
+        document.getElementById('levels-container').innerHTML = '';
+        document.getElementById('feature-cards-container').innerHTML = '';
+    }
+
+    // --- FIRESTORE: LIST ALL COURSES ---
+    async function loadCourses() {
+        const tbody = document.getElementById('courses-table-body');
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center">Loading...</td></tr>`;
+        try {
+            const snapshot = await db.collection('courses').get();
+            if (snapshot.empty) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center">No courses found</td></tr>`;
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const d = doc.data() || {};
+                html += `<tr>
+                    <td>${doc.id}</td>
+                    <td>${escapeHtml(d.title || '')}</td>
+                    <td>${escapeHtml(d.tagline || '')}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editCourse('${doc.id}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteCourse('${doc.id}')">Delete</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch (err) {
+            console.error(err);
+            document.getElementById('courses-table-body').innerHTML = `<tr><td colspan="4" style="text-align:center">Error loading courses</td></tr>`;
+        }
+    }
+
+    // --- EDIT: load a course doc into the form ---
+    async function editCourse(id) {
+        try {
+            const docRef = db.collection('courses').doc(id);
+            const docSnap = await docRef.get();
+            if (!docSnap.exists) {
+                displayStatus('Course not found: ' + id, true);
+                return;
+            }
+            const data = docSnap.data();
+
+            // fill main inputs
+            document.getElementById('course-id-input').value = id;
+            document.getElementById('title-input').value = data.title || '';
+            document.getElementById('tagline-input').value = data.tagline || '';
+            document.getElementById('image-input').value = data.image || '';
+
+            document.getElementById('pricing-heading-input').value = data.leftRight?.heading || '';
+            document.getElementById('pricing-paragraph-input').value = data.leftRight?.paragraph || '';
+            document.getElementById('pricing-image-input').value = data.leftRight?.image || '';
+
+            // clear repeaters then populate
+            clearRepeaters();
+            (Array.isArray(data.stats) ? data.stats : []).forEach((s, i) => addStatsItem(s));
+            (Array.isArray(data.learningOutcomes) ? data.learningOutcomes : []).forEach((l, i) => addLearningOutcomeItem(l));
+            (Array.isArray(data.confidenceJourney) ? data.confidenceJourney : []).forEach((lv, i) => addLevelItem(lv));
+            (Array.isArray(data.feature_cards) ? data.feature_cards : []).forEach((f, i) => addFeatureCardItem(f));
+
+            displayStatus(`Loaded course "${id}" into editor.`);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+            console.error(err);
+            displayStatus('Error loading course', true);
+        }
+    }
+
+    // --- DELETE ---
+    async function deleteCourse(id) {
+        if (!confirm(`Delete course "${id}"? This cannot be undone.`)) return;
+        try {
+            await db.collection('courses').doc(id).delete();
+            displayStatus(`Deleted ${id}`);
+            loadCourses();
+            // if current form editing same id, clear it
+            const currentId = document.getElementById('course-id-input').value.trim();
+            if (currentId === id) {
+                clearForm();
+            }
+        } catch (err) {
+            console.error(err);
+            displayStatus('Error deleting course', true);
+        }
+    }
+
+    // --- SAVE / UPDATE COURSE ---
+    async function saveCourseData() {
+        const courseId = document.getElementById('course-id-input').value.trim();
+        if (!courseId) return displayStatus('Please enter a Course ID', true);
+
+        // basic validation for required fields
+        const title = document.getElementById('title-input').value.trim();
+        const tagline = document.getElementById('tagline-input').value.trim();
+        if (!title || !tagline) {
+            return displayStatus('Title and Tagline are required', true);
+        }
+
+        const newCourseData = {
+            title: title,
+            tagline: tagline,
+            image: document.getElementById('image-input').value.trim(),
+            leftRight: {
+                heading: document.getElementById('pricing-heading-input').value,
+                paragraph: document.getElementById('pricing-paragraph-input').value,
+                image: document.getElementById('pricing-image-input').value
+            },
+            stats: collectStatsData(),
+            learningOutcomes: collectLearningOutcomesData(),
+            confidenceJourney: collectLevelsData(),
+            feature_cards: collectFeatureCardsData(),
+            updatedAt: new Date()
+        };
+
+        try {
+            await db.collection('courses').doc(courseId).set(newCourseData, { merge: true });
+            displayStatus(`Success! Data for ${courseId} saved.`);
+            loadCourses();
+        } catch (err) {
+            console.error(err);
+            displayStatus('Error saving data. See console.', true);
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('course-editor-form').reset();
+        clearRepeaters();
+    }
+
+    // small helper to escape text for table display
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text).replace(/[&<>"'`=\/]/g, function (s) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+                '/': '&#x2F;',
+                '=': '&#x3D;',
+                '`': '&#x60;'
+            })[s];
+        });
+    }
+
+    // initial load
+    window.onload = () => {
+        // start with one default repeater each so form is not empty (optional)
+        // (comment out if you don't want defaults on blank form)
+        clearRepeaters();
+        addStatsItem();
+        addLearningOutcomeItem();
+        addLevelItem();
+        addFeatureCardItem();
+
+        loadCourses();
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../nav-script.js"></script>
+</body>
+</html>

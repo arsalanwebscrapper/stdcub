@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Loading Course...</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script> 
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ========================================
+        YOUR COMPLETE CSS BLOCK GOES HERE
+        ========================================
+        */
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Batangas', sans-serif;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #000;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ffbc36;
+            padding: 60px 10%;
+            flex-wrap: wrap;
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero-content h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .hero-content h1 span {
+            color: #fff;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            color: #fff;
+            line-height: 1.5;
+        }
+
+        .hero-image img {
+            width: 300px;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        /* Learning Section */
+        .learning-section {
+            text-align: center;
+            padding: 60px 8%;
+            background-color: #fff;
+        }
+
+        .learning-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .learning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .learning-card {
+            background: #f9fcff;
+            border-radius: 12px;
+            padding: 25px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .learning-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .icon {
+            font-size: 1.8rem;
+        }
+
+        /* Color Variants */
+        .blue {
+            background-color: #e8f3ff;
+        }
+
+        .pink {
+            background-color: #ffeef0;
+        }
+
+        .green {
+            background-color: #eafff2;
+        }
+
+        .cream {
+            background-color: #fff9e8;
+        }
+
+        .purple {
+            background-color: #f1e8ff;
+        }
+
+        .peach {
+            background-color: #ffe9f0;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-content {
+                margin-bottom: 30px;
+            }
+
+            .hero-image img {
+                width: 220px;
+            }
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background-color: #ffbc36;
+            border-radius: 50px;
+            width: 85%;
+            margin: 60px auto;
+            padding: 25px 0;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: #000;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-icon {
+            font-size: 1.8rem;
+            background: #fff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 10px auto;
+        }
+
+        .stat-item h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-item p {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        /* Course Levels Section */
+        .course-levels {
+            background-color: #f5f7f6;
+            text-align: center;
+            padding: 70px 10%;
+        }
+
+        .course-levels h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 50px;
+        }
+
+        .levels-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .level-card {
+            border-radius: 15px;
+            color: #fff;
+            width: 280px;
+            padding: 35px 20px;
+            text-align: left;
+            position: relative;
+            transition: 0.3s ease;
+        }
+
+        .level-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .level-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .level-card p {
+            margin-bottom: 5px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .level-card button {
+            border: none;
+            margin-top: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            background-color: rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .level-card button:hover {
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        /* Card Colors */
+        .beginner {
+            background-color: #0097b2;
+        }
+
+        .intermediate {
+            background-color: #ffbc36;
+            color: #fff;
+        }
+
+        .advanced {
+            background-color: #7b4eff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .stats-container {
+                flex-direction: column;
+                gap: 25px;
+            }
+
+            .levels-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .level-card {
+                width: 90%;
+                text-align: center;
+            }
+        }
+
+        /* Educate Features Section */
+        .educate-features {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 80px 10%;
+        }
+
+        .educate-features h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 60px;
+            line-height: 1.4;
+        }
+
+        .features-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .feature-card {
+            background-color: #f5f7f6;
+            border-radius: 10px;
+            width: 320px;
+            padding: 40px 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Circle Icon */
+        .icon-circle {
+            background-color: #ffbc36;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px auto;
+        }
+
+        .icon-circle img {
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Titles and Lists */
+        .feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            text-align: left;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card ul li {
+            position: relative;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .feature-card ul li::before {
+            content: '›';
+            position: absolute;
+            left: -15px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Download Button */
+        .download-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffbc36;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 90%;
+            margin: 0 auto;
+            transition: background-color 0.3s;
+        }
+
+        .download-btn:hover {
+            background-color: #e0a52e;
+        }
+
+        .download-btn span {
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            padding: 5px 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .features-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .feature-card {
+                width: 90%;
+            }
+        }
+
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 80px 10%;
+            background-color: #ffffff; 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            overflow: hidden;
+        }
+
+        .pricing-content {
+            max-width: 550px;
+            padding-right: 20px; 
+        }
+
+        .pricing-content h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .pricing-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .pricing-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .pricing-btn-primary {
+            background-color: #7b4eff; 
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .pricing-btn-primary:hover {
+            background-color: #6a3adb;
+        }
+
+        .pricing-btn-secondary {
+            background-color: #2c3e50; 
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .pricing-btn-secondary:hover {
+            background-color: #1a2734;
+        }
+
+        .pricing-btn-secondary span {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .pricing-image {
+            flex-grow: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .pricing-image img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Responsive adjustments for pricing section */
+        @media (max-width: 1200px) {
+            .pricing-image {
+                justify-content: center;
+                margin-top: 40px;
+            }
+
+            .pricing-content {
+                padding-right: 0;
+                text-align: center;
+                max-width: 100%;
+            }
+
+            .pricing-buttons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pricing-content h2 {
+                font-size: 2rem;
+            }
+
+            .pricing-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .pricing-btn-primary,
+            .pricing-btn-secondary {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 80px 10%;
+            text-align: center;
+            position: relative;
+        }
+
+        .testimonials-section h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0d1330; 
+            margin-bottom: 50px;
+            padding-top: 10px; 
+        }
+
+        .testimonials-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .testimonial-card {
+            background-color: #f7f6ff; 
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 30px 25px;
+            width: 320px;
+            text-align: left;
+            transition: all 0.3s ease;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
+
+        .testimonial-card:hover {
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            color: #0d1330;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .testimonial-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0d1330;
+            margin-bottom: 5px;
+        }
+
+        .testimonial-role {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #7b4eff; 
+        }
+
+        /* Responsive */
+        @media (max-width: 1050px) {
+            .testimonial-card {
+                width: 45%; 
+            }
+        }
+
+        @media (max-width: 768px) {
+            .testimonial-card {
+                width: 90%; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <main id="dynamic-content-area">
+        <h2 style="text-align: center; padding: 100px; color: #7b4eff;">Loading Course Data... 🚀</h2>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script>
+        // ** FIREBASE CONFIGURATION **
+        const firebaseConfig = {
+            // YOUR ACTUAL FIREBASE CONFIG GOES HERE
+            apiKey: "AIzaSyC4YZeG_t60GX_9EFfMZ9jFDCsLUHbnbz8",
+            authDomain: "studycubs-official.firebaseapp.com",
+            databaseURL: "https://studycubs-official-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "studycubs-official",
+            storageBucket: "studycubs-official.firebasestorage.app",
+            messagingSenderId: "328675454729",
+            appId: "1:328675454729:web:11ed5ab9607c0e4590edd8",
+            measurementId: "G-EWPM4HZ7QP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(); 
+
+        // Get course ID early for use in normalization/fallbacks
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get('id') || 'financial_planning';
+        
+        // --- SAFE DEFAULT DATA (Fixed image URLs) ---
+        const SAFE_COURSE_DEFAULTS = {
+            name: "Default Course Name (Data Missing)",
+            hero: { title: "Course <span>Data Missing</span>", desc: "Please check your Firebase data via admin.html", image: "https://via.placeholder.com/400x300.png?text=Data+Missing" },
+            learning_cards: [], 
+            stats: [], 			
+            levels: [], 		
+            feature_cards: [], 	
+            pricing: { heading: "Pricing Data Missing", paragraph: "Enroll Now", price_btn: "N/A", image: "https://via.placeholder.com/400x300.png?text=Pricing+Missing" },
+            testimonials: [] 	
+        };
+        
+        // --- FALLBACK DATA (Using basic working structure) ---
+        const FALLBACK_DATA = {
+            'financial_planning': { 
+                name: "Financial Planning Program",
+                hero: { title: "Join our <span>Financial Planning Program</span>", desc: "Empowering students with personalized financial literacy experiences.", image: "https://i.imgur.com/0bWwK3r.png" },
+                learning_cards: [{ icon: '💰', title: 'Budgeting & Saving', class: 'blue' }],
+                stats: [{ icon: '👨‍🎓', count: '40+', label: 'Students Trained' }],
+                levels: [{ h3: '01', details: ['Class : 15hrs', 'Activity : 1 Class', 'Batch size : 1:5'], button: 'Beginner Level', class: 'beginner' }],
+                feature_cards: [{ icon_url: "https://cdn-icons-png.flaticon.com/512/3135/3135755.png", title: "Level 1 Focus", list: ["Intro to Money", "Needs vs. Wants"] }],
+                pricing: { heading: "Quality learning at an affordable price", paragraph: "Investing in your child’s future.", price_btn: "Enroll Now @ 1499/-", image: "https://i.imgur.com/8Fk7L3E.png" },
+                testimonials: [{ text: "Great course!", name: "Priya K.", role: "Parent" }]
+            },
+            'public_speaking': { 
+                name: "Public Speaking Mastery",
+                hero: { title: "Master the Art of <span>Public Speaking</span>", desc: "Build confidence, clarity, and charisma.", image: "https://i.imgur.com/0bWwK3r.png" },
+                learning_cards: [{ icon: '💬', title: 'Conversation skills', class: 'pink' }],
+                stats: [{ icon: '🗣️', count: '50+', label: 'Presentations Delivered' }],
+                levels: [{ h3: '01', details: ['Class : 15hrs', 'Activity : 1 Class', 'Batch size : 1:5'], button: 'Beginner Level', class: 'beginner' }],
+                feature_cards: [{ icon_url: "https://cdn-icons-png.flaticon.com/512/3135/3135755.png", title: "Beginner Focus", list: ["Story Telling", "Reading Foundation"] }],
+                pricing: { heading: "Quality learning at an affordable price", paragraph: "Investing in your child’s confidence.", price_btn: "Enroll Now @ 1699/-", image: "https://i.imgur.com/8Fk7L3E.png" },
+                testimonials: [{ text: "Great confidence booster!", name: "Anita Sharma", role: "Parent" }]
+            },
+            'ai_coding': { 
+                name: "AI & Coding Workshop",
+                hero: { title: "Explore the Future with <span>AI & Coding</span>", desc: "Practical workshops on AI fundamentals, programming, and robotics.", image: "https://i.imgur.com/0bWwK3r.png" },
+                learning_cards: [{ icon: '🤖', title: 'AI Fundamentals', class: 'blue' }],
+                stats: [{ icon: '🏆', count: '5+', label: 'Projects Completed' }],
+                levels: [{ h3: '01', details: ['Class : 20hrs', 'Projects : 2', 'Language : Scratch'], button: 'Explorer Level', class: 'beginner' }],
+                feature_cards: [{ icon_url: "https://cdn-icons-png.flaticon.com/512/3135/3135755.png", title: "Level 1 Focus", list: ["Block Coding", "Basic Loops"] }],
+                pricing: { heading: "Quality learning at an affordable price", paragraph: "Investing in future tech careers.", price_btn: "Enroll Now @ 1999/-", image: "https://i.imgur.com/8Fk7L3E.png" },
+                testimonials: [{ text: "My daughter built her first AI model!", name: "Kiran V.", role: "Parent, Tech" }]
+            }
+        };
+
+        // --- HTML GENERATION HELPERS (Hardened mapToHTML) ---
+        function mapToHTML(dataArray, type) {
+            const data = dataArray ?? []; 
+            if (!Array.isArray(data) || data.length === 0) {
+                 return ``; 
+            }
+            
+            switch (type) {
+                case 'learning_cards':
+                    return data.map(card => `
+                        <div class="learning-card ${card.class}">
+                            <div class="icon">${card.icon}</div>
+                            <h3>${card.title}</h3>
+                        </div>
+                    `).join('');
+                case 'stats':
+                    return data.map(stat => `
+                        <div class="stat-item">
+                            <div class="stat-icon">${stat.icon}</div>
+                            <h3>${stat.count}</h3>
+                            <p>${stat.label}</p>
+                        </div>
+                    `).join('');
+                case 'levels':
+                    // **CRITICAL FIX HERE**
+                    return data.map(level => {
+                        const detailsArray = level.details && Array.isArray(level.details) ? level.details : [];
+                        return `
+                            <div class="level-card ${level.class}">
+                                <h3>${level.h3 || 'N/A'}</h3>
+                                ${detailsArray.map(detail => `<p>${detail}</p>`).join('')}
+                                <button>${level.button || 'Explore'}</button>
+                            </div>
+                        `;
+                    }).join('');
+                case 'feature_cards':
+                    return data.map(feature => `
+                        <div class="feature-card">
+                            <div class="icon-circle">
+                                <img src="${feature.icon_url || 'https://via.placeholder.com/35'}" alt="${feature.title} Icon">
+                            </div>
+                            <h3>${feature.title}</h3>
+                            <ul>
+                                ${feature.list.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                            <button class="download-btn">Download <span>→</span></button>
+                        </div>
+                    `).join('');
+                case 'testimonials':
+                    return data.map(t => `
+                        <div class="testimonial-card">
+                            <p class="testimonial-text">${t.text}</p>
+                            <div>
+                                <p class="testimonial-name">${t.name}</p>
+                                <p class="testimonial-role">${t.role}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                default:
+                    return '';
+            }
+        }
+
+        function generateDynamicHTML(data) {
+            // Merge fetched data with safe defaults to ensure structure is complete
+            const courseData = { 
+                ...SAFE_COURSE_DEFAULTS, 
+                ...data,
+                hero: { ...SAFE_COURSE_DEFAULTS.hero, ...(data?.hero) },
+                pricing: { ...SAFE_COURSE_DEFAULTS.pricing, ...(data?.pricing) }
+            };
+
+            document.getElementById('page-title').textContent = courseData.name;
+            
+            return `
+                <section class="hero">
+                    <div class="hero-content">
+                        <h1>${courseData.hero.title}</h1>
+                        <p>${courseData.hero.desc}</p>
+                    </div>
+                    <div class="hero-image">
+                        <img src="${courseData.hero.image}" alt="${courseData.name} Hero Image">
+                    </div>
+                </section>
+
+                <section class="learning-section">
+                    <h2>What your child will learn</h2>
+                    <div class="learning-grid">${mapToHTML(courseData.learning_cards, 'learning_cards')}</div>
+                </section>
+                
+                <section class="stats-section">
+                    <div class="stats-container">${mapToHTML(courseData.stats, 'stats')}</div>
+                </section>
+
+                <section class="course-levels">
+                    <h2>Start your confidence boosting journey</h2>
+                    <div class="levels-container">${mapToHTML(courseData.levels, 'levels')}</div>
+                </section>
+
+                <section class="educate-features">
+                    <h2>Check Out Educate Features Win<br>Any Exam</h2>
+                    <div class="features-container">${mapToHTML(courseData.feature_cards, 'feature_cards')}</div>
+                </section>
+
+                <section class="pricing-section">
+                    <div class="pricing-content">
+                        <h2>${courseData.pricing.heading}</h2>
+                        <p>${courseData.pricing.paragraph}</p>
+                        <div class="pricing-buttons">
+                            <button class="pricing-btn-primary">${courseData.pricing.price_btn}</button>
+                            <button class="pricing-btn-secondary">Download <span>→</span></button>
+                        </div>
+                    </div>
+                    <div class="pricing-image">
+                        <img src="${courseData.pricing.image}" alt="Pricing Illustration">
+                    </div>
+                </section>
+
+                <section class="testimonials-section">
+                    <h2>Creating A Community Of Life Long Learners.</h2>
+                    <div class="testimonials-container">${mapToHTML(courseData.testimonials, 'testimonials')}</div>
+                </section>
+            `;
+        }
+
+        // --- DATA NORMALIZATION FUNCTION ---
+        function normalizeFirebaseData(fetchedData) {
+            if (!fetchedData) return null;
+
+            const currentFallback = FALLBACK_DATA[courseId];
+
+            const normalized = {
+                // 1. Rename and Map Top-Level Fields
+                name: fetchedData.title || 'Course Title Missing', // Use 'title' for 'name'
+                learning_cards: fetchedData.learningOutcomes || [], // Map 'learningOutcomes' to 'learning_cards'
+                stats: fetchedData.stats || [],
+                levels: fetchedData.confidenceJourney || [], // Map 'confidenceJourney' to 'levels'
+                
+                // 2. Map Nested 'hero' Fields
+                hero: {
+                    title: fetchedData.title || SAFE_COURSE_DEFAULTS.hero.title,
+                    desc: fetchedData.tagline || fetchedData.description || SAFE_COURSE_DEFAULTS.hero.desc,
+                    image: fetchedData.image || SAFE_COURSE_DEFAULTS.hero.image,
+                },
+
+                // 3. Map Nested 'pricing' Fields
+                pricing: {
+                    heading: fetchedData.leftRight?.heading || SAFE_COURSE_DEFAULTS.pricing.heading,
+                    paragraph: fetchedData.leftRight?.paragraph || SAFE_COURSE_DEFAULTS.pricing.paragraph,
+                    image: fetchedData.leftRight?.image || SAFE_COURSE_DEFAULTS.pricing.image,
+                    price_btn: currentFallback?.pricing?.price_btn || SAFE_COURSE_DEFAULTS.pricing.price_btn, 
+                },
+
+                // 4. Missing sections default to empty arrays/objects (can pull from fallback if needed)
+                // *** FIX APPLIED HERE: Prioritize Firebase data (fetchedData.feature_cards) over fallback ***
+                feature_cards: fetchedData.feature_cards || currentFallback?.feature_cards || [], 
+                testimonials: currentFallback?.testimonials || []
+            };
+            
+            return normalized;
+        }
+
+        // --- CORE DATA FETCHING (Using Normalization) ---
+        async function fetchCourseData(courseId) {
+            const contentArea = document.getElementById('dynamic-content-area');
+            let courseData = null;
+            
+            try {
+                const snapshot = await db.ref('courses/' + courseId).once('value');
+                const firebaseResult = snapshot.val();
+                
+                console.log(`[DEBUG] Requested ID: ${courseId}`);
+                console.log(`[DEBUG] Firebase Raw Result:`, firebaseResult); 
+                
+                if (firebaseResult) {
+                    // *** CRITICAL STEP: Normalize the data structure ***
+                    courseData = normalizeFirebaseData(firebaseResult);
+                    console.log(`[DEBUG] Successfully fetched and normalized live data.`);
+                } else if (FALLBACK_DATA[courseId]) {
+                    console.warn(`Data for ${courseId} not found in Firebase. Using local fallback.`);
+                    courseData = FALLBACK_DATA[courseId];
+                } else {
+                    console.error(`No data found in Firebase or local fallback for ID: ${courseId}.`);
+                    courseData = SAFE_COURSE_DEFAULTS; 
+                    courseData.name = `Course ID '${courseId}' Not Found.`;
+                }
+
+            } catch (error) {
+                console.error("Firebase connection or SDK error. Falling back to local data.", error);
+                courseData = FALLBACK_DATA[courseId] || SAFE_COURSE_DEFAULTS;
+            }
+            
+            // 4. Render the chosen data
+            const dynamicHTML = generateDynamicHTML(courseData);
+            contentArea.innerHTML = dynamicHTML;
+        }
+
+        // --- INITIALIZATION ---
+        
+        fetchCourseData(courseId);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/nav-script.js"></script>
+</body>
+</html>

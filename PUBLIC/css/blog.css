@@ -1,0 +1,58 @@
+/* Blog Listing Page Styles */
+.blog-header {
+    color: #0097B2;
+}
+
+.search-bar {
+    margin-top: 20px;
+}
+
+#search-input {
+    width: 100%;
+    max-width: 600px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.blog-card {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.blog-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.blog-card-content {
+    padding: 20px;
+}
+
+.blog-card-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.blog-card-content .meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.blog-card-content .description {
+    color: #333;
+}
+
+.blog-card-content .read-more {
+    margin-top: 20px;
+}

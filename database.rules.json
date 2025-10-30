@@ -1,0 +1,70 @@
+{
+  "rules": {
+    // Default to private access
+    ".read": false,
+    ".write": false,
+
+    // Defines who is an admin. `true` means they are an admin.
+    "admins": {
+      // Admins can read the full list of other admins.
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      // Only existing admins can make someone else an admin.
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$uid": {
+        // The value for an admin must be a boolean (true/false).
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    // User profiles
+    "users": {
+      // Admins can read the full list of users for the Users module.
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      // Admins can write to the users list (for creating/deleting).
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$userId": {
+        // A user can read their own data, and admins can read any user's data.
+        ".read": "auth != null && (auth.uid === $userId || root.child('admins').child(auth.uid).val() === true)",
+        // A user can write to their own data, and admins can write to any user's data.
+        ".write": "auth != null && (auth.uid === $userId || root.child('admins').child(auth.uid).val() === true)"
+      }
+    },
+
+    // Public content is readable by anyone, but only writable by admins.
+    "courses": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": ["category", "status"]
+    },
+    "resources": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+       ".indexOn": ["category", "subject"]
+    },
+    "blogs": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": "category"
+    },
+    "podcasts": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": "status"
+    },
+    "webinars": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": "date"
+    },
+
+    // Drafts and logs are admin-only access.
+    "drafts": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    },
+    "logs": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    }
+  }
+}
