@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const firebaseConfig = {
+const firebaseConfig = {
         apiKey: "AIzaSyC4YZeG_t60GX_9EFfMZ9jFDCsLUHbnbz8",
         authDomain: "studycubs-official.firebaseapp.com",
         databaseURL: "https://studycubs-official-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -9,6 +9,121 @@ document.addEventListener('DOMContentLoaded', function () {
         appId: "1:328675454729:web:11ed5ab9607c0e4590edd8",
         measurementId: "G-EWPM4HZ7QP"
     };
+
+// ================== YOUR GITHUB REPO CONFIG ==================
+const GITHUB_USERNAME = "arsalanwebscrapper";
+const GITHUB_REPO = "stdcub";
+const GITHUB_BRANCH = "main";
+const GITHUB_TOKEN = "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"; // ⚠️ Keep private
+
+// ==== Static HTML Generator ====
+function generateStaticHTML(title, author, content, image, date) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <meta name="description" content="${title} by ${author}" />
+  <link rel="stylesheet" href="/css/blog-style.css" />
+</head>
+<body>
+  <header class="blog-header">
+    <h1>${title}</h1>
+    <p>By ${author} • ${new Date(date).toLocaleDateString()}</p>
+  </header>
+  <article class="blog-content">
+    ${image ? `<img src="${image}" alt="${title}" style="width:100%;border-radius:8px;">` : ''}
+    ${content}
+  </article>
+  <footer>
+    <p>© ${new Date().getFullYear()} StudyCubs</p>
+  </footer>
+</body>
+</html>`;
+}
+
+// ==== GitHub Upload Function ====
+async function uploadToGitHub(fileName, htmlContent) {
+  const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/blogs/${fileName}`;
+  const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
+
+  // Check if file already exists (to get SHA for update)
+  let sha = null;
+  const getRes = await fetch(apiUrl, {
+    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+  });
+  if (getRes.ok) {
+    const data = await getRes.json();
+    sha = data.sha;
+  }
+
+  const body = {
+    message: `Auto-generated blog: ${fileName}`,
+    content: encodedContent,
+    branch: GITHUB_BRANCH,
+    ...(sha ? { sha } : {})
+  };
+
+  const res = await fetch(apiUrl, {
+    method: "PUT",
+    headers: {
+      Authorization: `token ${GITHUB_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) throw new Error(`GitHub upload failed: ${res.status}`);
+  return await res.json();
+}
+document.getElementById("post-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const title = document.getElementById("post-title").value.trim();
+  const category = document.getElementById("post-category").value.trim();
+  const metaDescription = document.getElementById("meta-description").value.trim();
+  const keywords = document.getElementById("keywords").value.trim();
+  const author = firebase.auth().currentUser.email;
+  const content = quill.root.innerHTML;
+  const featuredImage = document.getElementById("featured-image").files[0];
+  
+  let featuredImageURL = "";
+
+  if (featuredImage) {
+    const storageRef = firebase.storage().ref(`blog_images/${featuredImage.name}`);
+    await storageRef.put(featuredImage);
+    featuredImageURL = await storageRef.getDownloadURL();
+  }
+
+  const blogData = {
+    title,
+    category,
+    metaDescription,
+    keywords,
+    content,
+    featuredImageURL,
+    author,
+    date: firebase.firestore.FieldValue.serverTimestamp(),
+    status: "published"
+  };
+
+  // Firestore save
+  const docRef = await firebase.firestore().collection("blogs").add(blogData);
+
+  // 🔽 ADD THIS CODE RIGHT BELOW (after Firestore save succeeds)
+  const fileName = `${title.replace(/\s+/g, '-').toLowerCase()}.html`;
+  const htmlContent = generateStaticHTML(title, author, content, featuredImageURL, Date.now());
+
+  try {
+    await uploadToGitHub(fileName, htmlContent);
+    alert("✅ Blog uploaded to GitHub successfully!");
+  } catch (err) {
+    console.error(err);
+    alert("⚠️ Blog saved but GitHub upload failed.");
+  }
+});
 
     // --- INITIALIZATION ---
     firebase.initializeApp(firebaseConfig);
@@ -578,6 +693,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    
     function loadPodcastsModule() {
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const collectionPath = `artifacts/${appId}/public/data/podcasts`;
